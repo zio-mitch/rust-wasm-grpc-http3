@@ -48,3 +48,8 @@ Commit messages MUST follow this structure:
 ### Refactoring & Linting
 1.  **Refactor:** Requires a Feature Request explaining the rationale.
 2.  **Linting:** Avoid "noise" in functional commits. Perform linting on unrelated files in a **separate** refactor commit. (e.g., `FR-2026-00011 \| Refactor code formatting`).
+
+### Conventions
+
+1. [Make file standars](./.docs/context/makefile-standards.md)
+ 
