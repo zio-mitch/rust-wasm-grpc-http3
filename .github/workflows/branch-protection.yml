@@ -1,0 +1,16 @@
+name: "Enforce Develop Branch"
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  check-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Reject PRs to Main
+        run: |
+          echo "ERROR: All Pull Requests MUST target the 'develop' branch."
+          echo "Please recreate this PR against 'develop'."
+          exit 1

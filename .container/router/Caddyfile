@@ -1,0 +1,48 @@
+{
+    # We are switching off the admin web ui since it will mess with syncronization of the Caddyfile in development, and we don't need it in production.
+    admin off
+}
+
+# modern browsers support .localhost as a secure domain for development no need to mess with hosts file since is automatidcally resolved to
+
+# --- FRONTEND (WASM + HTML) ---
+app.localhost {
+    # 1. Single page app root directory
+    root * /usr/share/caddy
+
+    # 2. Forces correct MIME types (needed for WASM e JS modules) and adds HTTP/3 support
+    header {
+        # Assicura che il browser sappia come trattare i file
+        Access-Control-Allow-Origin *
+        Alt-Svc "h3=\":443\"; ma=86400"
+    }
+
+    # 3. Static assets management and single page application
+    handle {
+        # Prova a servire il file fisico, altrimenti rimanda a index.html
+        try_files {path} /index.html
+        file_server
+    }
+}
+
+# --- BACKEND (gRPC-Web) ---
+api.localhost {
+    # Header CORS allows app.localhost to call api.localhost
+    header {
+        Access-Control-Allow-Origin https://app.localhost
+        Access-Control-Allow-Methods "POST, OPTIONS"
+        Access-Control-Allow-Headers "keep-alive,user-agent,cache-control,content-type,content-transfer-encoding,x-accept-content-transfer-encoding,x-accept-response-streaming,x-user-agent,x-grpc-web,grpc-timeout"
+        Access-Control-Expose-Headers "grpc-status,grpc-message"
+    }
+
+    # Immediate response for browser preflight requests
+    @options method OPTIONS
+    respond @options 204
+
+    # Reverse proxy towards the Rust container using h2c (HTTP/2 Cleartext) for internal communication
+    reverse_proxy app_api:50051 {
+        transport http {
+            versions h2c 2
+        }
+    }
+}

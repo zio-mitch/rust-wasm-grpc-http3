@@ -1,0 +1,19 @@
+[package]
+name = "app_wasm"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+sycamore = "0.9.2"
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+tonic = { version = "0.12", default-features = false, features = ["codegen", "prost"] }
+prost = { version = "0.13" } 
+tonic-web-wasm-client = "0.6"
+getrandom = { version = "0.2", features = ["js"] }
+
+[build-dependencies]
+tonic-build = "0.12"

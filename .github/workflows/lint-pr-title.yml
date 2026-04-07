@@ -1,0 +1,22 @@
+name: "Lint PR Title"
+
+on:
+  pull_request:
+    types:
+      - opened
+      - edited
+      - synchronize
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PR Title Format
+        uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          # Regex per validare: (BR|FR)-2026-XXXXX | Description
+          subjectPattern: ^(BR|FR)-2026-\d{5} \| .+$
+          ignoreLabels: |
+            ignore-lint
