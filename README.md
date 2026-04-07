@@ -42,12 +42,17 @@ Launch Containers:
 
 Bash
 docker compose up --build
-SSL Authorization (Crucial):
-Caddy generates local certificates for .localhost domains. Browsers will block cross-domain calls unless manually authorized:
 
-Open https://app.localhost and accept the certificate (Advanced -> Proceed).
+### Troubleshooting
+> [!IMPORTANT] Domains resolution:
+> **Domain Resolution:** If `make start-services` shows ❌ for the `.localhost` domains, your OS may not be auto-resolving them. 
+> You might need to add the following to your `/etc/hosts` file:
+> `127.0.0.1 app.localhost api.localhost`
 
-Open https://api.localhost and accept the certificate. Without this step, gRPC calls will fail with a generic Network Error.
+> [!IMPORTANT] Caddy certificates
+> Caddy generates local certificates for .localhost domains. Browsers will block cross-domain calls unless manually authorized.
+> Open https://app.localhost and accept the certificate, without this step cannot access the app frontend in the browser.
+> Open https://api.localhost and accept the certificate, without this step, gRPC calls will fail with a generic Network Error.
 
 Configuration Changes
 Rust Code: Reloading is automatic thanks to file monitoring within the containers.
