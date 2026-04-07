@@ -2,7 +2,7 @@ name: "Issue ID generation"
 
 on:
   issues:
-    types: [opened, labeled] # Si attiva anche se aggiungi il label dopo l'apertura
+    types: [opened, labeled]
 
 jobs:
   assign-id:
@@ -26,7 +26,8 @@ jobs:
             if (labels.includes('feature') || labels.includes('fr')) prefix = "FR";
             else if (labels.includes('bug') || labels.includes('br')) prefix = "BR";
             
-            if (!prefix || issue.title.startsWith("FR-") || issue.title.startsWith("BR-")) {
+            const placeholder = `${prefix}-${year}-XXXXX`;
+            if (!prefix || !issue.title.includes(placeholder)) {
               return;
             }
 
@@ -37,13 +38,15 @@ jobs:
               per_page: 100
             });
 
-            const count = allIssues.data.filter(i => 
-              i.title.startsWith(`${prefix}-${year}-`)
-            ).length;
+            const regexFixedId = new RegExp(`^${prefix}-${year}-\\d{5}`);
+            const existingIds = allIssues.data
+              .map(i => i.title)
+              .filter(title => regexFixedId.test(title));
 
-            const nextNumber = String(count + 1).padStart(3, '0');
+            const nextNumber = String(existingIds.length + 1).padStart(5, '0');
             const newID = `${prefix}-${year}-${nextNumber}`;
-            const newTitle = `${newID} | ${issue.title}`;
+            
+            const newTitle = issue.title.replace(placeholder, newID);
 
             await github.rest.issues.update({
               owner: context.repo.owner,
@@ -52,4 +55,4 @@ jobs:
               title: newTitle
             });
 
-            console.log(`Assigned ID: ${newID}`);
+            console.log(`Replaced ${placeholder} with ${newID}`);
