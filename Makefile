@@ -3,7 +3,7 @@
 	proto-inspect \
 	router-debug router-inspect-frontend-artifact \
 	api-debug \
-	artifact-builder-rebuild artifact-builder-watch-logs artifact-builder-inspect-artifact
+	wasm-artifact-builder-rebuild wasm-artifact-builder-watch-logs wasm-artifact-builder-inspect-artifact
 
 .DEFAULT_GOAL := help
 
@@ -48,7 +48,7 @@ ensure-local-hosts: ## Check if host can access the domains used by services (e.
 proto-inspect: ## Inspect shared proto definitions across services
 	@echo "--- Checking generated protos ---"
 	docker compose exec app_api ls -R /usr/src/app/proto
-	docker compose exec app_artifact_builder ls -R /usr/src/app/proto
+	docker compose exec app_wasm_artifact_builder ls -R /usr/src/app/proto
 
 
 router-debug: ## Open an interactive shell inside the Router container
@@ -63,16 +63,16 @@ api-debug: ## Open an interactive shell inside the API container
 	@echo "--- Entering app_api. Type 'exit' to leave ---"
 	docker compose exec -it app_api sh
 
-artifact-builder-rebuild: ## Manually trigger a fresh WASM build by restarting the builder container
+wasm-artifact-builder-rebuild: ## Manually trigger a fresh WASM build by restarting the builder container
 	@echo "--- Restarting WASM builder to trigger a new build cycle ---"
-	docker compose restart app_artifact_builder
+	docker compose restart app_wasm_artifact_builder
 
 
-artifact-builder-watch-logs: ## Stream live logs from the WASM builder to monitor 'cargo watch' status
+wasm-artifact-builder-watch-logs: ## Stream live logs from the WASM builder to monitor 'cargo watch' status
 	@echo "--- Streaming live builder logs... ---"
-	docker compose logs -f app_artifact_builder
+	docker compose logs -f app_wasm_artifact_builder
 
-artifact-builder-inspect-artifact: ## Inspect the output directory of the WASM builder directly
+wasm-artifact-builder-inspect-artifact: ## Inspect the output directory of the WASM builder directly
 	@echo "--- Checking files in /artifact_pkg (Builder's perspective) ---"
-	docker compose exec app_artifact_builder ls -la /artifact_pkg
+	docker compose exec app_wasm_artifact_builder ls -la /artifact_pkg
 
