@@ -45,6 +45,7 @@ services:
       cargo install cargo-watch &&
       cargo watch -x run"
 
+  # [!TIP] app_artifact_builder service is needed to hot reload the frontend app into the router container
   app_artifact_builder:
     image: rust:${RUST_VER}-slim
     container_name: app_artifact_builder

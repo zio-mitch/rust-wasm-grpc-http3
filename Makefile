@@ -4,7 +4,6 @@
 ## Inspect shared proto definitions across services
 inspect-protos:
 	@echo "--- Checking generated protos ---"
-	docker compose exec app_api ls -R /usr/src/app/proto
 	docker compose exec app_artifact_builder ls -R /usr/src/app/proto
 
 ## List the frontend artifacts from the Router's perspective
