@@ -1,0 +1,20 @@
+{
+    "google.gemini.enabled": true,
+    "google.gemini.inlineSuggestions.enabled": true,
+    "google.cloudcode.project": "YOUR-GOOGLE-CODE-PROJECT-ID",
+    
+    // Optimizations
+    "rust-analyzer.linkedProjects": [
+        "./api/Cargo.toml",
+        "./app/Cargo.toml"
+    ],
+    "rust-analyzer.cargo.buildScripts.enable": true,
+    "rust-analyzer.procMacro.enable": true,
+    
+    // Heavy folders excluded to speed up AI aided tools
+    "search.exclude": {
+        "**/target": true,
+        "**/node_modules": true,
+        "**/artifact_pkg": true
+    }
+}

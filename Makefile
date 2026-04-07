@@ -1,4 +1,15 @@
-.PHONY: start-services stop-services reset-services proto-inspect router-debug router-inspect-frontend-artifact api-debug artifact-builder-rebuild artifact-builder-watch-logs artifact-builder-inspect-artifact
+.PHONY: help start-services stop-services reset-services proto-inspect router-debug router-inspect-frontend-artifact api-debug artifact-builder-rebuild artifact-builder-watch-logs artifact-builder-inspect-artifact
+
+.DEFAULT_GOAL := help
+
+## Help
+help:
+	@echo "--- 🛠️ gRPC-Rust Project Management ---"
+	@echo "Usage: make [target]"
+	@echo ""
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+
+all: tools-setup-vscode start-services
 
 ## Start all containers
 start-services: ensure-local-hosts
@@ -59,3 +70,13 @@ artifact-builder-inspect-artifact:
 	@echo "--- Checking files in /artifact_pkg (Builder's perspective) ---"
 	docker compose exec app_artifact_builder ls -la /artifact_pkg
 
+## Setup VS Code settings from example file
+tools-setup-vscode:
+	@@if [ -f .vscode/settings.json ]; then \
+		echo "⚠️  .vscode/settings.json already exists. Skipping..."; \
+	else \
+		echo "--- VS Code AI Configuration ---"; \
+		read -p "Enter your Google Cloud Project ID: " project_id; \
+		sed "s/YOUR-GOOGLE-CLOUD-PROJECT-ID-HERE/$$project_id/g" .vscode/settings.json.example > .vscode/settings.json; \
+		echo "✅ .vscode/settings.json generated successfully."; \
+	fi
