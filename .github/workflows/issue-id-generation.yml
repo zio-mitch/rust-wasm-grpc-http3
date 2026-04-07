@@ -1,0 +1,55 @@
+name: "Issue ID generation"
+
+on:
+  issues:
+    types: [opened, labeled] # Si attiva anche se aggiungi il label dopo l'apertura
+
+jobs:
+  assign-id:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Get Current Year
+        id: date
+        run: echo "year=$(date +'%Y')" >> $GITHUB_OUTPUT
+
+      - name: Process Issue ID
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const year = "${{ steps.date.outputs.year }}";
+            const issue = context.payload.issue;
+            const labels = issue.labels.map(l => l.name.toLowerCase());
+            
+            let prefix = "";
+            if (labels.includes('feature') || labels.includes('fr')) prefix = "FR";
+            else if (labels.includes('bug') || labels.includes('br')) prefix = "BR";
+            
+            if (!prefix || issue.title.startsWith("FR-") || issue.title.startsWith("BR-")) {
+              return;
+            }
+
+            const allIssues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'all',
+              per_page: 100
+            });
+
+            const count = allIssues.data.filter(i => 
+              i.title.startsWith(`${prefix}-${year}-`)
+            ).length;
+
+            const nextNumber = String(count + 1).padStart(3, '0');
+            const newID = `${prefix}-${year}-${nextNumber}`;
+            const newTitle = `${newID} | ${issue.title}`;
+
+            await github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.number,
+              title: newTitle
+            });
+
+            console.log(`Assigned ID: ${newID}`);
