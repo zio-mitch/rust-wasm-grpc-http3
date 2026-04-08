@@ -22,13 +22,17 @@ impl Greeter for MyGreeter {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let addr = "0.0.0.0:50051".parse()?;
+    let port = env!("API_PORT");
+    let addr_str = format!("0.0.0.0:{}", port);
+    let addr = addr_str.parse()?;
+
     let greeter = MyGreeter::default();
     let service = GreeterServer::new(greeter);
 
     println!("Server gRPC pronto su {}", addr);
 
     Server::builder()
+        // >[!HINT] FIXME: when webTransport is ready to work in wasm we can pass to http3 usage
         .accept_http1(true)
         // We use Layer: since it is more compatible with generated types and tonic-web's expectations for gRPC-Web,
         .layer(GrpcWebLayer::new()) 

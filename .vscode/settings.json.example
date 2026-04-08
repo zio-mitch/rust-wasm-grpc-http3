@@ -1,8 +1,4 @@
-{
-    "google.gemini.enabled": true,
-    "google.gemini.inlineSuggestions.enabled": true,
-    "google.cloudcode.project": "YOUR-GOOGLE-CODE-PROJECT-ID",
-    
+{  
     // Optimizations
     "rust-analyzer.linkedProjects": [
         "./api/Cargo.toml",

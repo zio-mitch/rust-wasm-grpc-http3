@@ -1,1 +1,5 @@
 .vscode/settings.json   
+
+# [!TIP] FIX THIS as you can se in docker-compose.yml, rust target stuff should not go under the source dir
+api/target 
+client_artifact/target 

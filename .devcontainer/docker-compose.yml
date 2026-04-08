@@ -1,0 +1,126 @@
+services:
+  app_router:
+    image: caddy:latest
+    container_name: app_router
+    restart: unless-stopped
+    environment:
+      - WEBUI_HOST=${WEBUI_HOST}   
+      - WEBUI_PORT=$(WEBUI_PORT)                                  
+      - API_HOST=${API_HOST}
+      - API_PORT_FOR_WASM=${API_PORT_FOR_WASM}                       # [!TIP] when webTransport will be available for WASM we need to change api.localhost:443 to api.localhost:50051
+    ports:
+      - "127.0.0.1:80:80"                                            # HTTP (for automatic redirect)
+      - "127.0.0.1:${WEBUI_PORT}:${WEBUI_PORT}"                      # HTTPS (TCP)
+      - "127.0.0.1:${API_PORT_FOR_WASM}:${API_PORT_FOR_WASM}/udp"    # HTTP/3 (UDP) - to be used only if Caddy is configured to support HTTP/3, otherwise can be removed
+    volumes:
+      - app_client_artifact:/usr/share/caddy:ro                      # Shared app artifacts (static files)
+      - ./router/Caddyfile:/etc/caddy/Caddyfile
+      - router_caddy_data:/data
+      - router_caddy_config:/config
+    networks:
+      - app_network
+    depends_on:
+      app_api:
+        condition: service_started
+      app_client_artifact_builder:
+        condition: service_healthy
+    healthcheck:
+      test: 
+        - "CMD-SHELL"
+        - "curl -f -k --resolve app.localhost:${WEBUI_PORT}:127.0.0.1 https://app.localhost/ && curl -f -k --resolve api.localhost:${API_PORT_FOR_WASM}:127.0.0.1 https://api.localhost/"
+      interval: 6s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # [!TIP] app_rust_base_builder service is needed to build the base image with all the dependencies for both api and client artifact builder, so we can use it as a common cache layer for both services
+  app_rust_base_builder:
+    build:
+      context: .
+      dockerfile: ./rust/Dockerfile
+    image: ${RUST_BASE_IMAGE}
+    entrypoint: ["echo", "Base image built"]
+
+  app_api:
+    build: 
+      context: .          
+      dockerfile: ./api/Dockerfile
+      args:
+        - BASE_IMAGE=${RUST_BASE_IMAGE}
+    container_name: app_api
+    working_dir: /usr/src/app
+    environment:
+      - CARGO_TARGET_DIR=${CARGO_TARGET_DIR} # Forces cargo target dir to be out of the api dir
+      - CARGO_TERM_COLOR=always
+      - WEBUI_HOST=${WEBUI_HOST}             # Used for app referenced responses
+      - API_HOST=${API_HOST}                 # Used for self referenced responses, internally bound to 0.0.0.0 (lisen on all interfaces)
+      - API_PORT=${API_PORT}
+    ports:
+      - "127.0.0.1:${API_PORT}:${API_PORT}"
+    volumes:
+      - ./../api:/usr/src/app
+      - ./../proto:/usr/src/proto:ro         # Shared proto artifacts (generated code)
+      - app_api_cargo_cache:/usr/local/cargo/registry
+      - app_api_rust_target:/cargo_target
+    networks:
+      - app_network
+    depends_on:
+      app_rust_base_builder:
+        condition: service_completed_successfully
+    command: >
+      sh -c "(command -v cargo-watch >/dev/null || cargo install cargo-watch) &&
+      cargo watch -x 'run --target-dir ${CARGO_TARGET_DIR}'"    
+    healthcheck:
+      test: ["CMD-SHELL", "timeout 1s bash -c ':> /dev/tcp/127.0.0.1/${API_PORT}' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s   
+
+  # [!TIP] app_artifact_builder service is needed to hot reload the frontend app into the router container
+  app_client_artifact_builder:
+    build: 
+      context: .        
+      dockerfile: ./client_artifact/Dockerfile
+      args:
+        - BASE_IMAGE=${RUST_BASE_IMAGE}
+    container_name: app_client_artifact_builder
+    working_dir: /usr/src/client_artifact
+    environment:
+      - WEBUI_HOST=${WEBUI_HOST}
+      - API_HOST=${API_HOST}
+      - API_PORT=${API_PORT_FOR_WASM}
+      - CARGO_TARGET_DIR=${CARGO_TARGET_DIR} # Forces cargo target dir to be out of the app dir
+      - CARGO_TERM_COLOR=always
+    volumes:
+      - ./../client_artifact:/usr/src/client_artifact
+      - ./../proto:/usr/src/proto:ro        # Shared proto artifacts (generated code)
+      - app_client_artifact:/artifact_pkg
+      - app_client_artifact_builder_cargo_cache:/usr/local/cargo/registry
+      - app_client_artifact_builder_rust_target:/cargo_target
+    # [!TIP] for production should be used 'wasm-pack build --target web --release' instead of '--dev' to get optimized .wasm files
+    depends_on:
+      app_rust_base_builder:
+        condition: service_completed_successfully
+    command: >
+      sh -c "cargo install wasm-pack cargo-watch &&
+      cargo watch -i 'pkg/*' -s 'wasm-pack build --out-name client --target web --dev --out-dir /artifact_pkg/wasm -- --target-dir ${CARGO_TARGET_DIR} && cp index.html /artifact_pkg/'"
+    healthcheck:
+      test: ["CMD", "sh", "-c", "ls /artifact_pkg/wasm/*.wasm"]
+      interval: 10s      
+      timeout: 5s
+      retries: 60         
+      start_period: 60s
+
+networks:
+  app_network:
+    driver: bridge
+
+volumes:
+  router_caddy_data:
+  router_caddy_config:
+  app_api_cargo_cache:  
+  app_api_rust_target:  
+  app_client_artifact_builder_cargo_cache:  
+  app_client_artifact_builder_rust_target:
+  app_client_artifact:

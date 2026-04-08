@@ -6,7 +6,7 @@
 # modern browsers support .localhost as a secure domain for development no need to mess with hosts file since is automatidcally resolved to
 
 # --- FRONTEND (WASM + HTML) ---
-app.localhost {
+client.localhost {
     # 1. Single page app root directory
     root * /usr/share/caddy
 
@@ -27,9 +27,9 @@ app.localhost {
 
 # --- BACKEND (gRPC-Web) ---
 api.localhost {
-    # Header CORS allows app.localhost to call api.localhost
+    # Header CORS allows client.localhost to call api.localhost
     header {
-        Access-Control-Allow-Origin https://app.localhost
+        Access-Control-Allow-Origin https://client.localhost
         Access-Control-Allow-Methods "POST, OPTIONS"
         Access-Control-Allow-Headers "keep-alive,user-agent,cache-control,content-type,content-transfer-encoding,x-accept-content-transfer-encoding,x-accept-response-streaming,x-user-agent,x-grpc-web,grpc-timeout"
         Access-Control-Expose-Headers "grpc-status,grpc-message"

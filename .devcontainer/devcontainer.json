@@ -1,0 +1,44 @@
+{
+    "name": "Rust Fullstack Dev Environment",
+    "dockerComposeFile": "docker-compose.yml",
+    "service": "app_api", // Il container principale dove "vivrai"
+    "workspaceFolder": "/usr/src/app",
+
+    // Sincronizza i tuoi settings.json nel container
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "rust-lang.rust-analyzer",
+                "tamasfe.even-better-toml",
+                "serayuzgur.crates",
+                "vadimcn.vscode-lldb",
+                "mutantdino.resourcemonitor"
+            ],
+            "settings": {
+                "rust-analyzer.linkedProjects": [
+                    "/usr/src/app/Cargo.toml",
+                    "/usr/src/wasm_artifact/Cargo.toml"
+                ],
+                "rust-analyzer.cargo.buildScripts.enable": true,
+                "rust-analyzer.procMacro.enable": true,
+                "search.exclude": {
+                    "**/target": true,
+                    "**/artifact_pkg": true
+                }
+            }
+        }
+    },
+
+    // Importante: i file creati nel container appartengono al tuo utente
+    "remoteUser": "root", 
+
+    // Avvia i servizi necessari in background
+    "runServices": [
+        "app_api",
+        "app_router",
+        "app_wasm_artifact_builder"
+    ],
+
+    // Espone le porte sul tuo localhost
+    "forwardPorts": [80, 443, 8080]
+}

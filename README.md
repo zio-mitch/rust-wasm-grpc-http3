@@ -1,6 +1,13 @@
 # 🚀 Rust Full-Stack: gRPC-Web, WASM & HTTP/3
 This project is a "Single Model" reference architecture for high-performance modern web applications. It leverages Rust on both ends (Frontend and Backend) to ensure memory safety, native speed, and a shared end-to-end type system.
 
+## 🖼️ Frontend UI Model (WASM + egui)
+The frontend UI is built with `egui`/`eframe` and runs in the browser as WebAssembly.
+
+- The UI is rendered on a `canvas` via WASM (immediate-mode GUI).
+- `index.html` is only the host page/bootstrapping shell.
+- API communication remains gRPC-Web with generated protobuf types.
+
 ## 🌐 Modern Protocols & Networking
 The project is designed to operate on the most advanced protocols available today, with an architecture ready for the next evolution of the Web.
 
@@ -65,7 +72,7 @@ docker compose restart app_router
 ## 📂 Project Structure
 /proto: gRPC definitions (The single data model).
 
-/app: Sycamore (Rust) frontend compiled to WASM.
+/wasm_artifact: egui (Rust) frontend compiled to WASM (canvas-based rendering).
 
 /api: Tonic (Rust) backend with native gRPC-Web layer support.
 

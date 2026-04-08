@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rust WASM Egui App</title>
+    <style>
+        html, body {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #111827;
+        }
+
+        #app-canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="app-canvas"></canvas>
+
+    <script type="module">
+        import init, * as wasm from './wasm/client.js';
+
+        async function run() {
+            try {
+                await init('./wasm/client_bg.wasm');
+
+                if (typeof wasm.start === 'function') {
+                    await wasm.start('app-canvas');
+                } else if (typeof wasm.start_web === 'function') {
+                    await wasm.start_web('app-canvas');
+                } else {
+                    throw new Error('Bootstrap function not found: start/start_web');
+                }
+
+                console.log('WASM egui avviata con successo');
+            } catch (e) {
+                console.error('Errore nel bootstrap WASM:', e);
+            }
+        }
+
+        run();
+    </script>
+</body>
+</html>
